@@ -1,0 +1,83 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Finance Assistant - Register</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .box {
+            background: white;
+            padding: 35px;
+            width: 330px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px #555;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        input {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>AI Finance Assistant</h2>
+        <h3>Create Account</h3>
+
+        {% with messages = get_flashed_messages() %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="text" name="name"
+                   placeholder="Full Name" required>
+
+            <input type="email" name="email"
+                   placeholder="Email Address" required>
+
+            <input type="password" name="password"
+                   placeholder="Create Password (min 6 characters)"
+                   minlength="6" required>
+
+            <button type="submit">Register</button>
+        </form>
+
+        <p>Already have an account?
+            <a href="/login">Login Here</a>
+        </p>
+    </div>
+</body>
+</html>
+```

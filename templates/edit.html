@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Transaction</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f1f5f9;
+            padding: 40px;
+        }
+        .box {
+            background: white;
+            max-width: 400px;
+            margin: auto;
+            padding: 25px;
+            border-radius: 12px;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4338ca;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        a { color: #4338ca; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Edit Transaction</h2>
+
+        <form method="POST">
+            <label>Category</label>
+            <input type="text" name="category"
+                   value="{{ t.category }}" required>
+
+            <label>Amount</label>
+            <input type="number" name="amount"
+                   value="{{ t.amount }}" min="0.01"
+                   step="0.01" required>
+
+            <label>Description</label>
+            <input type="text" name="description"
+                   value="{{ t.description or '' }}">
+
+            <label>Date</label>
+            <input type="date" name="date"
+                   value="{{ t.date }}" required>
+
+            <button type="submit">Update Transaction</button>
+        </form>
+
+        <a href="/dashboard">Back to Dashboard</a>
+    </div>
+</body>
+</html>

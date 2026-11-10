@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Finance Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6fb;
+            color: #263248;
+        }
+
+        header {
+            background: #312e81;
+            color: white;
+            padding: 18px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            background: #dc3545;
+            padding: 10px 16px;
+            border-radius: 6px;
+        }
+
+        main { padding: 25px 5%; }
+
+        .cards, .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+
+        .card, .panel {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0000000d;
+        }
+
+        .amount {
+            font-size: 26px;
+            font-weight: bold;
+            color: #4338ca;
+        }
+
+        form { margin-top: 12px; }
+
+        input, select, button {
+            width: 100%;
+            padding: 11px;
+            margin: 7px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #4338ca;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover { background: #312e81; }
+
+        .message {
+            background: #e0f2fe;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        th { background: #eef0ff; }
+
+        td a { color: #4338ca; }
+
+        .delete {
+            background: #dc3545;
+            padding: 7px;
+        }
+
+        .budget-row { margin: 18px 0; }
+
+        .progress {
+            background: #e5e7eb;
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress span {
+            display: block;
+            height: 100%;
+            background: #4f46e5;
+        }
+
+        #chatAnswer {
+            background: #eef0ff;
+            padding: 12px;
+            border-radius: 7px;
+            min-height: 35px;
+        }
+
+        @media(max-width: 600px) {
+            main { padding: 15px; }
+            table { font-size: 12px; }
+            th, td { padding: 7px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>💰 AI Finance Assistant</h2>
+    <a href="/logout">Logout</a>
+</header>
+
+<main>
+
+    <h2>Welcome, {{ name }}!</h2>
+    <p>Manage your money and understand your spending.</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="cards">
+        <div class="card">
+            <h3>💵 Total Income</h3>
+            <p class="amount">₹{{ "%.2f"|format(income) }}</p>
+        </div>
+
+        <div class="card">
+            <h3>💳 Total Expenses</h3>
+            <p class="amount">₹{{ "%.2f"|format(expenses) }}</p>
+        </div>
+
+        <div class="card">
+            <h3>🏦 Remaining Balance</h3>
+            <p class="amount">₹{{ "%.2f"|format(balance) }}</p>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Add Income / Expense</h2>
+
+        <form action="/add_transaction" method="POST">
+
+            <select name="type" required>
+                <option value="">Select transaction type</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+
+            <select name="category" required>
+                <option value="Auto Detect">AI Auto Detect Category</option>
+                <option>Salary</option>
+                <option>Food</option>
+                <option>Travel</option>
+                <option>Shopping</option>
+                <option>Education</option>
+                <option>Medical</option>
+                <option>Bills</option>
+                <option>Entertainment</option>
+                <option>Rent</option>
+                <option>Other</option>
+            </select>
+
+            <input type="number" name="amount"
+                   placeholder="Amount in ₹" min="0.01"
+                   step="0.01" required>
+
+            <input type="text" name="description"
+                   placeholder="Description (example: lunch, salary, bus ticket)">
+
+            <label>Transaction Date</label>
+            <input type="date" name="date" required>
+
+            <button type="submit">Add Transaction</button>
+        </form>
+
+        <p><small>AI category prediction: 
+        {{ "Machine learning model active" if ml_available else "Keyword-based fallback active" }}</small></p>
+    </div>
+
+    <div class="panel">
+        <h2>Monthly Budget</h2>
+
+        <form action="/add_budget" method="POST">
+            <select name="category" required>
+                <option value="">Choose category</option>
+                <option>Food</option>
+                <option>Travel</option>
+                <option>Shopping</option>
+                <option>Education</option>
+                <option>Medical</option>
+                <option>Bills</option>
+                <option>Entertainment</option>
+                <option>Rent</option>
+                <option>Other</option>
+            </select>
+
+            <input type="number" name="amount"
+                   placeholder="Monthly budget in ₹"
+                   min="1" step="0.01" required>
+
+            <label>Budget Month</label>
+            <input type="month" name="month"
+                   value="{{ request_month if request_month else '' }}"
+                   required>
+
+            <button type="submit">Save Budget</button>
+        </form>
+
+        {% for b in budget_info %}
+            <div class="budget-row">
+                <strong>{{ b.category }}</strong>
+                — ₹{{ "%.2f"|format(b.spent) }} spent of
+                ₹{{ "%.2f"|format(b.amount) }}
+
+                {% if b.remaining < 0 %}
+                    <p style="color:red">Budget exceeded by ₹{{ "%.2f"|format(-b.remaining) }}</p>
+                {% else %}
+                    <p>Remaining: ₹{{ "%.2f"|format(b.remaining) }}</p>
+                {% endif %}
+
+                <div class="progress">
+                    <span style="width: {{ [100, (b.spent / b.amount * 100)]|min }}%"></span>
+                </div>
+            </div>
+        {% else %}
+            <p>No budgets added for this month yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="charts">
+        <div class="panel">
+            <h2>Expense by Category</h2>
+            <canvas id="categoryChart"></canvas>
+        </div>
+
+        <div class="panel">
+            <h2>Monthly Expenses</h2>
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>🤖 AI Spending Insights</h2>
+
+        {% for insight in insights %}
+            <div class="message">{{ insight }}</div>
+        {% endfor %}
+
+        <h3>Estimated Monthly Spending</h3>
+        <p class="amount">₹{{ "%.2f"|format(forecast) }}</p>
+        <small>Estimate based on available recent monthly expense records, not a guaranteed prediction.</small>
+    </div>
+
+    <div class="panel">
+        <h2>🤖 Finance Chatbot</h2>
+        <p>Ask about your income, expenses, balance or spending category.</p>
+
+        <input type="text" id="question"
+               placeholder="Example: What are my total expenses?">
+
+        <button type="button" onclick="askAssistant()">Ask AI Assistant</button>
+
+        <p id="chatAnswer">Your answer will appear here.</p>
+    </div>
+
+    <div class="panel">
+        <h2>Transaction History</h2>
+
+        <div style="overflow-x:auto">
+            <table>
+                <tr>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t.type }}</td>
+                    <td>{{ t.category }}</td>
+                    <td>₹{{ "%.2f"|format(t.amount) }}</td>
+                    <td>{{ t.description }}</td>
+                    <td>{{ t.date }}</td>
+                    <td>
+                        <a href="/edit/{{ t.id }}">Edit</a>
+
+                        <form action="/delete/{{ t.id }}" method="POST"
+                              onsubmit="return confirm('Delete this transaction?')">
+                            <button class="delete" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No transactions added yet.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    const categoryLabels = {{ category_data | map(attribute='category') | list | tojson }};
+const categoryValues = {{ category_data | map(attribute='total') | list | tojson }};
+
+const monthlyLabels = {{ monthly_data | map(attribute='month') | list | tojson }};
+const monthlyValues = {{ monthly_data | map(attribute='total') | list | tojson }};
+
+if (typeof Chart !== "undefined") {
+    new Chart(document.getElementById("categoryChart"), {
+        type: "doughnut",
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                label: "Expenses",
+                data: categoryValues
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    new Chart(document.getElementById("monthlyChart"), {
+        type: "bar",
+        data: {
+            labels: monthlyLabels,
+            datasets: [{
+                label: "Expenses (₹)",
+                data: monthlyValues
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+} else {
+    console.error("Chart.js did not load. Check your internet connection.");
+}
+
+    async function askAssistant() {
+        const question = document.getElementById("question").value;
+
+        if (!question.trim()) {
+            alert("Please enter a question.");
+            return;
+        }
+
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({message: question})
+        });
+
+        const result = await response.json();
+        document.getElementById("chatAnswer").innerText = result.answer;
+    }
+</script>
+
+</body>
+</html>
